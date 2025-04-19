@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetes Prediction | Health Check</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Google Fonts - Noto Sans Thai -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4e73df;
+            --secondary-color: #1cc88a;
+            --dark-color: #5a5c69;
+            --light-color: #f8f9fc;
+        }
+
+        body {
+            font-family: 'Noto Sans Thai', sans-serif;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+        }
+
+        .hero-section {
+            background: linear-gradient(135deg, var(--primary-color) 0%, #224abe 100%);
+            color: white;
+            padding: 3rem 0;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .prediction-card {
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border: none;
+            margin-top: -50px;
+            z-index: 10;
+        }
+
+        .form-label {
+            font-weight: 500;
+        }
+
+        .btn-predict {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 10px 25px;
+            font-weight: 600;
+        }
+
+        .btn-predict:hover {
+            background-color: #3a5bc7;
+        }
+
+        .result-box {
+            min-height: 100px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .diabetic {
+            background-color: #f8d7da;
+            color: #721c24;
+            border-left: 5px solid #dc3545;
+        }
+
+        .not-diabetic {
+            background-color: #d1e7dd;
+            color: #0f5132;
+            border-left: 5px solid #198754;
+        }
+
+        .confidence-meter {
+            height: 10px;
+            border-radius: 5px;
+            background: linear-gradient(to right, #4e73df, #1cc88a);
+            margin-top: 10px;
+        }
+
+        .confidence-value {
+            height: 100%;
+            border-radius: 5px;
+            background-color: white;
+        }
+
+        footer {
+            background-color: var(--dark-color);
+            color: white;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: rgba(78, 115, 223, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 2rem 0;
+            }
+
+            .hero-title {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="institution-header">
+        <img src="https://www3.ict.mahidol.ac.th/ICTSurveysV2/Content/image/MUICT2.png" alt="Mahidol University">
+        <div class="course-info">
+            Web Application นี้ เป็นส่วนนึงของรายวิชา <strong>ITDS251 Fundamentals of Machine Learning</strong><br>
+            ภาคเรียนที่ 2 ปีการศึกษา 2567<br>
+            คณะเทคโนโลยีสารสนเทศและการสื่อสาร มหาวิทยาลัยมหิดล<br>
+            จัดทำโดย <strong>นายศุกลภัทร ภิสัชเพ็ญ 6687052</strong>
+        </div>
+    </header>
+    </head>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">DiabetesPredict</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#">หน้าหลัก</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">เกี่ยวกับ</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">ติดต่อเรา</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container text-center">
+            <h1 class="hero-title mb-3">ตรวจสอบความเสี่ยงโรคเบาหวาน</h1>
+            <p class="lead">กรอกข้อมูลพื้นฐานเพื่อประเมินความเสี่ยงโรคเบาหวานด้วยเทคโนโลยี AI</p>
+        </div>
+    </section>
+
+    <!-- Prediction Card -->
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card prediction-card">
+                    <div class="card-body p-4">
+                        <h3 class="card-title text-center mb-4">แบบประเมินความเสี่ยง</h3>
+
+                        <form id="predictionForm">
+                            <div class="mb-3">
+                                <label for="glucose" class="form-label">ระดับน้ำตาลในเลือด (mg/dL)</label>
+                                <input type="number" class="form-control form-control-lg" id="glucose"
+                                    placeholder="70-200" required>
+                                <div class="form-text">ค่าปกติ: น้อยกว่า 100 mg/dL</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="bmi" class="form-label">ดัชนีมวลกาย (BMI)</label>
+                                <input type="number" step="0.1" class="form-control form-control-lg" id="bmi"
+                                    placeholder="18.5-40" required>
+                                <div class="form-text">ค่าปกติ: 18.5 - 22.9 kg/m²</div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label for="age" class="form-label">อายุ (ปี)</label>
+                                <input type="number" class="form-control form-control-lg" id="age" placeholder="20-100"
+                                    required>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="button" class="btn btn-primary btn-predict btn-lg" onclick="predict()">
+                                    <i class="bi bi-calculator"></i> ประเมินความเสี่ยง
+                                </button>
+                            </div>
+                        </form>
+
+                        <!-- Result Section -->
+                        <div id="resultContainer" class="mt-4 d-none">
+                            <h5 class="text-center mb-3">ผลการประเมิน</h5>
+                            <div id="resultBox" class="result-box p-3 mb-3">
+                                <div id="resultText" class="text-center fw-bold my-3">
+                                    กรุณากรอกข้อมูลและกดปุ่มประเมินความเสี่ยง</div>
+                                <div id="confidenceText" class="text-center"></div>
+                                <div class="confidence-meter mt-2">
+                                    <div id="confidenceValue" class="confidence-value" style="width: 100%"></div>
+                                </div>
+                            </div>
+                            <div class="alert alert-info">
+                                <small>หมายเหตุ: ผลลัพธ์นี้เป็นการประเมินเบื้องต้นเท่านั้น ไม่ใช่การวินิจฉัยโรค
+                                    กรุณาปรึกษาแพทย์สำหรับการตรวจที่แม่นยำ</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <section class="container mt-5">
+        <div class="row text-center">
+            <div class="col-md-4 mb-4">
+                <div class="feature-icon mx-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="var(--primary-color)"
+                        viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
+                        <path d="M8 13A5 5 0 1 1 8 3a5 5 0 0 1 0 10zm0 1A6 6 0 1 0 8 2a6 6 0 0 0 0 12z" />
+                        <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8z" />
+                        <path d="M9.5 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+                    </svg>
+                </div>
+                <h4>แม่นยำ</h4>
+                <p>ใช้โมเดล Machine Learning ที่ผ่านการฝึกฝนมาอย่างดี</p>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="feature-icon mx-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="var(--primary-color)"
+                        viewBox="0 0 16 16">
+                        <path
+                            d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z" />
+                    </svg>
+                </div>
+                <h4>รวดเร็ว</h4>
+                <p>รู้ผลทันทีภายในไม่กี่วินาทีหลังกรอกข้อมูล</p>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="feature-icon mx-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="var(--primary-color)"
+                        viewBox="0 0 16 16">
+                        <path
+                            d="M8 1a2 2 0 0 1 2 2v4H6V3a2 2 0 0 1 2-2zm3 6V3a3 3 0 0 0-6 0v4a2 2 0 0 0-2 2v5a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z" />
+                    </svg>
+                </div>
+                <h4>ปลอดภัย</h4>
+                <p>ข้อมูลของคุณจะไม่ถูกเก็บหรือใช้ในวัตถุประสงค์อื่น</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section: คำแนะนำและคำอธิบายโปรเจกต์ -->
+    <section class="container mt-5">
+        <h4 class="mb-3">คำแนะนำการใช้งาน</h4>
+        <p>กรุณากรอกข้อมูลระดับน้ำตาลในเลือด (Glucose), ดัชนีมวลกาย (BMI) และอายุของคุณ จากนั้นคลิกที่ปุ่ม
+            “ประเมินความเสี่ยง” ระบบจะทำการประมวลผลและแสดงผลลัพธ์ว่าเสี่ยงต่อโรคเบาหวานหรือไม่
+            พร้อมแสดงค่าความมั่นใจในการทำนาย</p>
+    </section>
+
+    <section class="container mt-4">
+        <h4 class="mb-3">วัตถุประสงค์และขั้นตอนของโปรเจกต์</h4>
+        <p>แลปนี้มีวัตถุประสงค์เพื่อพัฒนาเว็บแอปพลิเคชันที่สามารถพยากรณ์ความเสี่ยงของการเป็นโรคเบาหวานโดยใช้ Machine
+            Learning โมเดล โดยผู้ใช้งานสามารถกรอกข้อมูลสุขภาพ เช่น ระดับน้ำตาลในเลือด (Glucose), ดัชนีมวลกาย (BMI)
+            และอายุ (Age) ผ่านหน้าเว็บไซต์
+            และระบบจะทำการประมวลผลผ่านโมเดลที่ถูกฝึกไว้ล่วงหน้าและส่งผลลัพธ์กลับมาอย่างรวดเร็วและใช้งานง่าย</p>
+        <ol>
+            <li><strong>การเตรียมข้อมูลและฝึกโมเดล:</strong> ใช้ชุดข้อมูล Pima Indians Diabetes Dataset จาก Kaggle
+                โดยมีการทำ Data Cleaning และใช้ K-Nearest Neighbors (KNN) เป็นโมเดลหลัก บันทึกเป็นไฟล์ .pkl ด้วย pickle
+            </li>
+            <li><strong>การสร้าง REST API ด้วย Flask:</strong> สร้าง API ด้วย Flask สำหรับรับข้อมูลจาก frontend
+                และส่งผลลัพธ์กลับในรูปแบบ JSON</li>
+            <li><strong>การสร้างหน้าเว็บไซต์:</strong> ใช้ HTML + JavaScript ในการรับค่าจากผู้ใช้ และส่งข้อมูลผ่าน
+                fetch() ไปยัง Flask API พร้อมแสดงผลลัพธ์ทันที</li>
+        </ol>
+        <p><strong>การใช้งาน:</strong> ผู้ใช้งานเพียงกรอกค่าทั้งสามตัว และกด “Predict”
+            ระบบจะแจ้งผลว่าเสี่ยงเป็นเบาหวานหรือไม่ พร้อมค่าความมั่นใจ</p>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>DiabetesPredict</h5>
+                    <p>แอปพลิเคชันประเมินความเสี่ยงโรคเบาหวานด้วยเทคโนโลยีปัญญาประดิษฐ์</p>
+                </div>
+                <div class="col-md-3">
+                    <h5>ลิงค์ด่วน</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="#" class="text-white">หน้าหลัก</a></li>
+                        <li><a href="#" class="text-white">เกี่ยวกับเรา</a></li>
+                        <li><a href="#" class="text-white">นโยบายความเป็นส่วนตัว</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>ติดต่อเรา</h5>
+                    <ul class="list-unstyled">
+                        <li>อีเมล: info@diabetespredict.com</li>
+                        <li>โทรศัพท์: 02-123-4567</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="mt-4 bg-light">
+            <div class="text-center">
+                <small>© 2023 DiabetesPredict. All rights reserved.</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        async function predict() {
+            // Get input values
+            const glucose = parseInt(document.getElementById("glucose").value);
+            const bmi = parseFloat(document.getElementById("bmi").value);
+            const age = parseInt(document.getElementById("age").value);
+
+            // Validate inputs
+            if (isNaN(glucose)) {
+                alert("กรุณากรอกระดับน้ำตาลในเลือดให้ถูกต้อง");
+                return;
+            }
+            if (isNaN(bmi)) {
+                alert("กรุณากรอกดัชนีมวลกาย (BMI) ให้ถูกต้อง");
+                return;
+            }
+            if (isNaN(age)) {
+                alert("กรุณากรอกอายุให้ถูกต้อง");
+                return;
+            }
+
+            // Show loading state
+            const predictBtn = document.querySelector('.btn-predict');
+            predictBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> กำลังประเมิน...';
+            predictBtn.disabled = true;
+
+            try {
+                // Send request to backend
+                const response = await fetch("http://localhost:5000/diabetes", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ Glucose: glucose, BMI: bmi, Age: age })
+                });
+
+                const result = await response.json();
+
+                // Display result
+                const resultBox = document.getElementById("resultBox");
+                const resultText = document.getElementById("resultText");
+                const confidenceText = document.getElementById("confidenceText");
+                const confidenceValue = document.getElementById("confidenceValue");
+                const resultContainer = document.getElementById("resultContainer");
+
+                if (result.result === 1) {
+                    resultBox.className = "result-box p-3 mb-3 diabetic";
+                    resultText.textContent = "มีความเสี่ยงเป็นโรคเบาหวาน";
+                } else {
+                    resultBox.className = "result-box p-3 mb-3 not-diabetic";
+                    resultText.textContent = "ไม่มีความเสี่ยงเป็นโรคเบาหวาน";
+                }
+
+                const confidencePercent = (result.confidence * 100).toFixed(1);
+                confidenceText.textContent = `ความมั่นใจในการประเมิน: ${confidencePercent}%`;
+                confidenceValue.style.width = `${100 - (result.confidence * 100)}%`;
+
+                resultContainer.classList.remove("d-none");
+
+            } catch (error) {
+                alert("เกิดข้อผิดพลาดในการเชื่อมต่อกับเซิร์ฟเวอร์");
+                console.error("Prediction error:", error);
+            } finally {
+                // Reset button
+                predictBtn.innerHTML = '<i class="bi bi-calculator"></i> ประเมินความเสี่ยง';
+                predictBtn.disabled = false;
+            }
+        }
+
+        // Add input validation
+        document.getElementById("predictionForm").addEventListener("submit", function (e) {
+            e.preventDefault();
+            predict();
+        });
+    </script>
+</body>
+
+</html>
